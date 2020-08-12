@@ -1,0 +1,41 @@
+## The code in the other file works well if kf is a function of theta. The functions to find kf are: 
+
+@njit()
+def energy(kx, ky, a, e0, t0, t1, t2):
+	""" Tight binding energy as a function of kx and ky
+	"""
+	return 	e0 - 2*t0*(np.cos(kx*a) + np.cos(ky*a)) - 4*t1*(np.cos(kx*a) * np.cos(ky*a)) - 2*t2*(np.cos(2*kx*a) + np.cos(2*ky*a))
+
+
+@njit()
+def polar_energy(r, theta, a, e0, t0, t1, t2):
+	""" A wrapper for the tight binding energy in
+	polar coordinates.
+	"""
+	kx, ky = polar_to_cartesian(r, theta)
+	return energy(kx, ky, a, e0, t0, t1, t2)
+
+
+@njit()
+def polar_to_cartesian(r, theta):
+	""" Utility function for converting from polar to
+	cartesian coordinates """
+	x = r*np.cos(theta)
+	y = r*np.sin(theta)
+	return x, y
+
+
+def interpolate_fermi_surface(theta, a, e0, t0, t1, t2):
+	""" Interpolate the tight binding energy to find the Fermi
+	wavevector at theta. Find zeros of the energy in each direction. """
+	kf = optimize.newton(polar_energy, x0=np.pi/(2*a), args=(theta, a, e0, t0, t1, t2), tol=1e-4/a)
+	return kf, theta
+  
+  ### all of which work, but the retsult is an array for kf. 
+  
+  
+  ## Ideally, kf would be a function of theta, something like: 
+  
+  kf =lambda theta: optimize.newton(polar_energy, x0=np.pi/(2*a), args=(theta, a, e0, t0, t1, t2), tol=1e-4/a)
+  
+  ### but this doesn't work since the minimization procedure breaks when theta isn't defined (all other arguments are)
