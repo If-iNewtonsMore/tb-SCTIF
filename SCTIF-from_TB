@@ -1,0 +1,56 @@
+### Here, kf is an array found from some previously defined code
+    
+###   This stuff all works fine and as expected: 
+
+
+
+    def f_zeta(theta):
+        
+        N = len(kf)
+        zeta_array = np.empty(N)
+        for i in range(0, N):
+            dtheta = (theta[i] - theta[i-1])
+            dkf = np.log(kf[i]) - np.log(kf[i-1])
+            zeta_array[i] = np.arctan(dkf/dtheta)
+        return zeta_array
+    
+    def vx(theta):
+     	return np.cos(theta - f_zeta(theta))
+    
+    
+    def vy(theta):
+        return np.sin(theta - f_zeta(theta))
+    
+    
+    def G2(theta,T,B):
+        return (func_gamma(T)*np.sin(4*theta)+4*theta)/(4*func_wct(T, B))
+    
+    
+    def xxint(theta,phi,T,B):
+        return vx(theta-phi)*np.exp(G2(theta-phi, T, B))*np.exp(-G2(theta, T, B))
+    
+    
+    def xyint(phi,theta, T, B):
+     	return vy(theta-phi)*np.exp(G2(theta-phi, T, B))*np.exp(-G2(theta, T, B))
+      
+      
+  #### This integral throws the TypeError; I've tried various other methods of integration, none of which work. I assume it's because f_zeta(theta) is an array of values when theta is defined
+    ### The only integration method which didn't throw an error is fixed_quad, but the result of print(integrand)='nan' so the integral was an array of 'nan'
+    
+    
+    def sxx(fkf,theta, T, B):
+        integrand = lambda phi: xxint(theta, phi, T, B)
+        integral, _ = integrate.quad(integrand, 0, 100)
+        ans = fkf*vx(theta)*integral
+        return ans
+        
+    
+    ### The function I'd nxt like to run is: 
+    
+      # def sigma_xx(fkf,T,B):
+    #  	outer_integrand = lambda theta: sxx(fkf,theta,T,B)
+    #  	xx, _ = integrate.quad(outer_integrand, 0, np.pi, n=100)
+    #  	prefactors = 2*E*C2/(B*4*np.power(np.pi, 3))
+    #  	return xx * prefactors
+    
+    ### I have no idea yet if this will work or not since the previous function is broken. Later, I'll define fkf=kf (array), T and B (scalars)
